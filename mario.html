@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mario - Thử Thách Vật Lí 9</title>
+    <style>
+        /* =========================================================
+           CSS THUẦN (KHÔNG DÙNG TAILWIND, KHÔNG IMPORT)
+           ========================================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #5C94FC; /* Bầu trời Mario */
+            font-family: system-ui, -apple-system, sans-serif; /* Font hệ thống */
+            touch-action: none;
+            user-select: none;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Typography & Utilities */
+        .pixel-font { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .text-white { color: #fff; }
+        .text-red-500 { color: #ef4444; }
+        .text-yellow-300 { color: #fde047; }
+        .text-yellow-400 { color: #facc15; }
+        .text-blue-500 { color: #3b82f6; }
+        .text-blue-600 { color: #2563eb; }
+        .text-green-500 { color: #22c55e; }
+        .text-gray-500 { color: #6b7280; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .text-gray-800 { color: #1f2937; }
+        
+        .text-center { text-align: center; }
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-5xl { font-size: 3rem; }
+        .text-6xl { font-size: 3.75rem; }
+        
+        .font-bold { font-weight: bold; }
+        .font-semibold { font-weight: 600; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        
+        .drop-shadow { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+        .drop-shadow-md { filter: drop-shadow(0 4px 3px rgba(0,0,0,0.5)); }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+
+        /* Layout & Flexbox */
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .w-full { width: 100%; }
+        
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .items-end { align-items: flex-end; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        
+        /* UI Components */
+        .bg-black-40 { background-color: rgba(0,0,0,0.4); }
+        .bg-black-80 { background-color: rgba(0,0,0,0.8); }
+        .bg-black-90 { background-color: rgba(0,0,0,0.9); }
+        .bg-white { background-color: #fff; }
+        .bg-red-600 { background-color: #dc2626; }
+        .bg-green-500 { background-color: #22c55e; }
+        .bg-blue-500 { background-color: #3b82f6; }
+        .bg-orange-500 { background-color: #f97316; }
+
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-full { border-radius: 9999px; }
+
+        .btn {
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: transform 0.1s, background-color 0.2s;
+            border-bottom: 4px solid;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-start { border-bottom-color: #991b1b; }
+        .btn-start:hover { background-color: #b91c1c; }
+        .btn-restart { border-bottom-color: #15803d; }
+        .btn-restart:hover { background-color: #16a34a; }
+
+        /* HUD Overlay */
+        #uiOverlay {
+            padding: 1rem;
+            pointer-events: none;
+            z-index: 60;
+        }
+        .hud-badge {
+            padding: 0.25rem 0.75rem;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            background-color: rgba(31, 41, 55, 0.5);
+            border: 2px solid white;
+            height: 1rem;
+            width: 12rem;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            background: linear-gradient(to right, #4ade80, #3b82f6);
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modals & Screens */
+        .screen-container {
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+        .modal-card {
+            padding: 1.5rem;
+            margin: 1rem;
+            max-width: 28rem;
+            width: 100%;
+            pointer-events: auto;
+        }
+        .q-modal-card {
+            max-width: 42rem;
+            max-height: 90vh;
+            border: 4px solid #3b82f6;
+            border-radius: 1rem;
+        }
+        
+        .answer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .answer-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .answer-btn {
+            width: 100%;
+            padding: 1rem;
+            text-align: left;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background: white;
+            font-weight: 600;
+            color: #374151;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .answer-btn:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .answer-btn.correct { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .answer-btn.wrong { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+
+        .hidden { display: none !important; }
+        .opacity-0 { opacity: 0; }
+        .overflow-y-auto { overflow-y: auto; }
+
+        /* Animation */
+        @keyframes shake {
+            0%, 100% { transform: translate(1px, 1px) rotate(0deg); }
+            10%, 50%, 90% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20%, 60% { transform: translate(-3px, 0px) rotate(1deg); }
+            30%, 70% { transform: translate(3px, 2px) rotate(0deg); }
+            40%, 80% { transform: translate(1px, -1px) rotate(1deg); }
+        }
+        .shake { animation: shake 0.5s; }
+    </style>
+</head>
+<body>
+
+    <!-- UI Overlay (HUD) -->
+    <div id="uiOverlay" class="absolute inset-0 flex justify-between items-start">
+        <div class="flex flex-col gap-2">
+            <div class="pixel-font text-white text-xl drop-shadow-md tracking-wider">ĐIỂM: <span id="scoreEl">0</span></div>
+            <div class="pixel-font text-yellow-300 text-lg drop-shadow-md tracking-wider">THỜI GIAN: <span id="timeEl">60:00</span></div>
+            <div class="flex gap-1" id="livesEl" style="font-size: 1.25rem;">
+                <!-- Hearts -->
+            </div>
+            <div class="progress-bar-container rounded-full relative">
+                <div id="progressFill" class="progress-fill"></div>
+                <div class="absolute inset-0 progress-text text-white pixel-font font-bold" id="progressText">0/100</div>
+            </div>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+            <div class="text-white font-bold bg-black-40 rounded-lg hud-badge">Cấp độ: <span id="levelEl">1</span></div>
+            <div class="text-white font-bold bg-black-40 rounded-lg text-sm hud-badge">Câu hỏi: Nhặt Táo</div>
+        </div>
+    </div>
+
+    <!-- Canvas Game -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Menu Bắt Đầu -->
+    <div id="startScreen" class="absolute inset-0 bg-black-80 flex flex-col items-center justify-center screen-container">
+        <h1 class="pixel-font text-5xl text-red-500 text-center" style="margin-bottom: 1rem; line-height: 1.2; text-shadow: 0 4px 4px rgba(255,255,255,0.5);">MARIO<br><span class="text-3xl text-white">VẬT LÍ 9</span></h1>
+        <div class="bg-white rounded-xl shadow-2xl modal-card">
+            <h2 class="text-xl font-bold text-center text-gray-800" style="margin-bottom: 1rem;">Hướng Dẫn Chơi</h2>
+            <ul class="text-gray-700" style="margin-bottom: 1.5rem; list-style: none; line-height: 1.8;">
+                <li>🕹️ <b>Nhảy:</b> Phím Cách hoặc Click chuột</li>
+                <li>🍄 <b>Nấm:</b> Giúp to lớn hơn & +100 điểm</li>
+                <li>🍎 <b>Táo:</b> Trả lời câu hỏi (+500 điểm)</li>
+                <li>🦀 <b>Cua:</b> Né tránh, chạm vào mất mạng!</li>
+            </ul>
+            <button id="startBtn" class="w-full pixel-font bg-red-600 text-white rounded-lg text-xl btn btn-start" style="padding: 1rem;">BẮT ĐẦU</button>
+        </div>
+    </div>
+
+    <!-- Modal Câu Hỏi -->
+    <div id="questionModal" class="absolute inset-0 bg-black-90 flex items-center justify-center screen-container hidden opacity-0">
+        <div class="bg-white q-modal-card flex flex-col shadow-2xl" style="padding: 1.5rem; width: 90%;">
+            <div class="flex justify-between items-center" style="border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                <span id="qLevelBadge" class="rounded-full text-xs font-bold text-white bg-blue-500" style="padding: 0.25rem 0.75rem;">Mức độ</span>
+                <span class="font-bold text-gray-500">Câu hỏi <span id="qCountDisplay">1</span>/100</span>
+            </div>
+            <h2 id="questionText" class="text-xl font-bold text-gray-800 overflow-y-auto" style="line-height: 1.5; margin-bottom: 1.5rem;">Nội dung câu hỏi...</h2>
+            <div id="answersGrid" class="answer-grid">
+                <!-- Buttons injected -->
+            </div>
+            <div id="feedbackText" class="text-center font-bold text-lg hidden" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <!-- Menu Game Over -->
+    <div id="gameOverScreen" class="absolute inset-0 bg-black-90 flex flex-col items-center justify-center screen-container hidden opacity-0">
+        <h1 class="pixel-font text-5xl text-white" style="margin-bottom: 0.5rem;">GAME OVER</h1>
+        <div class="bg-white rounded-2xl shadow-2xl modal-card text-center" style="margin-top: 1.5rem;">
+            <h2 class="text-2xl font-bold text-gray-800" style="margin-bottom: 0.5rem;">KẾT QUẢ</h2>
+            <div class="text-5xl pixel-font text-blue-600" id="finalScore" style="margin: 1rem 0;">0</div>
+            
+            <div style="margin: 1.5rem 0;">
+                <div class="text-gray-500 uppercase tracking-widest text-sm font-bold">Xếp hạng</div>
+                <div id="finalRank" class="text-6xl font-bold text-gray-500" style="font-family: serif; margin-top: 0.5rem;">S</div>
+                <div id="rankDesc" class="text-sm font-bold text-gray-600" style="margin-top: 0.5rem;">Tuyệt Đỉnh</div>
+            </div>
+
+            <div class="text-sm text-gray-600 text-left" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-bottom: 1.5rem;">
+                <p>Số câu đã trả lời: <span id="finalQs" class="font-bold">0</span>/100</p>
+                <p>Khoảng cách: <span id="finalDist" class="font-bold">0</span>m</p>
+            </div>
+
+            <button id="restartBtn" class="w-full pixel-font bg-green-500 text-white rounded-lg text-xl btn btn-restart" style="padding: 1rem;">CHƠI LẠI</button>
+        </div>
+    </div>
+
+<script>
+/**
+ * NGÂN HÀNG CÂU HỎI VẬT LÍ 9
+ */
+const rawQuestions = [
+    // --- NHẬN BIẾT ---
+    {q: "Đơn vị của điện trở là gì?", a: ["Vôn (V)", "Ampe (A)", "Ôm (Ω)", "Oát (W)"], c: 2, l: 1},
+    {q: "Công thức tính điện trở tương đương của đoạn mạch nối tiếp là:", a: ["Rtđ = R1 + R2", "Rtđ = R1 - R2", "1/Rtđ = 1/R1 + 1/R2", "Rtđ = (R1.R2)/(R1+R2)"], c: 0, l: 1},
+    {q: "Hệ thức của định luật Ôm là:", a: ["I = U/R", "I = U.R", "U = I/R", "R = I/U"], c: 0, l: 1},
+    {q: "Dụng cụ dùng để đo cường độ dòng điện là:", a: ["Vôn kế", "Ampe kế", "Công tơ điện", "Nhiệt kế"], c: 1, l: 1},
+    {q: "Dụng cụ dùng để đo hiệu điện thế là:", a: ["Vôn kế", "Ampe kế", "Ôm kế", "Công tơ điện"], c: 0, l: 1},
+    {q: "Công suất điện cho biết:", a: ["Khả năng thực hiện công", "Lượng điện năng sử dụng trong 1 đơn vị thời gian", "Mức độ mạnh yếu của dòng điện", "Độ lớn của hiệu điện thế"], c: 1, l: 1},
+    {q: "Đơn vị của công suất điện là:", a: ["Joule (J)", "Vôn (V)", "Ampe (A)", "Oát (W)"], c: 3, l: 1},
+    {q: "Đơn vị của điện năng (công của dòng điện) là:", a: ["Oát (W)", "Ampe (A)", "Joule (J) hoặc kWh", "Vôn (V)"], c: 2, l: 1},
+    {q: "Công tơ điện dùng để đo đại lượng nào?", a: ["Cường độ dòng điện", "Điện năng tiêu thụ", "Hiệu điện thế", "Công suất điện"], c: 1, l: 1},
+    {q: "Định luật Joule - Lenz cho biết điện năng biến đổi thành dạng năng lượng nào?", a: ["Cơ năng", "Quang năng", "Nhiệt năng", "Hóa năng"], c: 2, l: 1},
+    {q: "Hệ thức của định luật Joule - Lenz là:", a: ["Q = I².R.t", "Q = I.R².t", "Q = U.I.t", "Q = U²/R.t"], c: 0, l: 1},
+    {q: "Nam châm vĩnh cửu có mấy từ cực?", a: ["1", "2", "3", "4"], c: 1, l: 1},
+    {q: "Khi đặt hai nam châm lại gần nhau, các từ cực:", a: ["Cùng tên thì hút, khác tên thì đẩy", "Cùng tên thì đẩy, khác tên thì hút", "Luôn hút nhau", "Luôn đẩy nhau"], c: 1, l: 1},
+    {q: "Từ trường tồn tại ở đâu?", a: ["Xung quanh điện tích đứng yên", "Xung quanh nam châm hoặc dòng điện", "Xung quanh mọi vật", "Chỉ xung quanh Trái Đất"], c: 1, l: 1},
+    {q: "Đường sức từ của nam châm thẳng có chiều như thế nào ở bên ngoài nam châm?", a: ["Vào cực Bắc, ra cực Nam", "Vào cực Nam, ra cực Bắc", "Đi song song", "Tùy ý"], c: 1, l: 1},
+    {q: "Quy tắc nắm tay phải dùng để xác định:", a: ["Chiều của lực điện từ", "Chiều đường sức từ của dòng điện", "Chiều dòng điện cảm ứng", "Cực của nam châm"], c: 1, l: 1},
+    {q: "Quy tắc bàn tay trái dùng để xác định:", a: ["Chiều của dòng điện", "Chiều đường sức từ", "Chiều của lực điện từ", "Độ lớn của lực từ"], c: 2, l: 1},
+    {q: "Điều kiện xuất hiện dòng điện cảm ứng là:", a: ["Số đường sức từ qua tiết diện S biến thiên", "Số đường sức từ không đổi", "Cuộn dây đứng yên", "Nam châm đứng yên"], c: 0, l: 1},
+    {q: "Máy phát điện xoay chiều hoạt động dựa trên hiện tượng nào?", a: ["Tác dụng nhiệt của dòng điện", "Cảm ứng điện từ", "Lực từ", "Nhiễu xạ"], c: 1, l: 1},
+    {q: "Để giảm hao phí điện năng trên đường dây tải điện, biện pháp tối ưu nhất là:", a: ["Tăng tiết diện dây", "Dùng dây dẫn tốt hơn", "Tăng hiệu điện thế truyền tải", "Giảm công suất"], c: 2, l: 1},
+    {q: "Hiện tượng khúc xạ ánh sáng là hiện tượng tia sáng bị:", a: ["Gãy khúc tại mặt phân cách hai môi trường", "Hắt lại môi trường cũ", "Hấp thụ hoàn toàn", "Đi thẳng"], c: 0, l: 1},
+    {q: "Thấu kính hội tụ có đặc điểm phần rìa:", a: ["Dày hơn phần giữa", "Mỏng hơn phần giữa", "Bằng phần giữa", "Lồi ra"], c: 1, l: 1},
+    {q: "Thấu kính phân kì có đặc điểm phần rìa:", a: ["Dày hơn phần giữa", "Mỏng hơn phần giữa", "Bằng phần giữa", "Không có rìa"], c: 0, l: 1},
+    {q: "Ảnh tạo bởi thấu kính phân kì luôn là:", a: ["Ảnh thật, ngược chiều", "Ảnh ảo, cùng chiều, nhỏ hơn vật", "Ảnh ảo, cùng chiều, lớn hơn vật", "Ảnh thật, cùng chiều"], c: 1, l: 1},
+    {q: "Mắt cận là mắt:", a: ["Nhìn xa rõ, nhìn gần kém", "Nhìn gần rõ, nhìn xa kém", "Nhìn đâu cũng mờ", "Chỉ nhìn rõ màu đỏ"], c: 1, l: 1},
+    {q: "Để khắc phục tật cận thị, ta cần đeo kính:", a: ["Thấu kính hội tụ", "Thấu kính phân kì", "Kính râm", "Gương cầu lõm"], c: 1, l: 1},
+    {q: "Mắt lão thị là mắt:", a: ["Nhìn xa rõ, nhìn gần kém", "Nhìn gần rõ, nhìn xa kém", "Của trẻ em", "Nhìn ban đêm rõ"], c: 0, l: 1},
+    {q: "Kính lúp là một thấu kính:", a: ["Phân kì có tiêu cự ngắn", "Hội tụ có tiêu cự dài", "Hội tụ có tiêu cự ngắn", "Phân kì có tiêu cự dài"], c: 2, l: 1},
+    {q: "Ánh sáng trắng qua lăng kính bị phân tích thành các dải màu:", a: ["Đỏ, cam, vàng, lục, lam, chàm, tím", "Đỏ, xanh, vàng", "Trắng và đen", "Đỏ và xanh"], c: 0, l: 1},
+    {q: "Vật màu trắng có khả năng tán xạ:", a: ["Tất cả các màu", "Chỉ màu trắng", "Không tán xạ màu nào", "Chỉ màu đen"], c: 0, l: 1},
+    {q: "Vật màu đen:", a: ["Tán xạ mọi màu", "Hấp thụ mọi ánh sáng màu", "Chỉ tán xạ màu đen", "Phát ra ánh sáng đen"], c: 1, l: 1},
+    {q: "Năng lượng không tự sinh ra, không tự mất đi mà chỉ:", a: ["Tồn tại mãi mãi", "Chuyển từ dạng này sang dạng khác", "Tiêu hao dần", "Sinh ra liên tục"], c: 1, l: 1},
+    {q: "Điện trở của dây dẫn phụ thuộc vào:", a: ["Chiều dài, tiết diện, vật liệu", "Chỉ chiều dài", "Chỉ tiết diện", "Chỉ vật liệu"], c: 0, l: 1},
+    {q: "Công thức tính điện trở của dây dẫn:", a: ["R = ρ.S/l", "R = ρ.l/S", "R = l/(ρ.S)", "R = S/(ρ.l)"], c: 1, l: 1},
+    {q: "Biến trở là dụng cụ dùng để:", a: ["Đo cường độ dòng điện", "Đo hiệu điện thế", "Thay đổi điện trở trong mạch", "Thay đổi nguồn điện"], c: 2, l: 1},
+    {q: "Quy tắc bàn tay phải dùng cho:", a: ["Ống dây có dòng điện chạy qua", "Nam châm chữ U", "Dây dẫn thẳng", "Gương cầu lồi"], c: 0, l: 1},
+    {q: "Lõi sắt non trong ống dây có tác dụng:", a: ["Làm giảm từ trường", "Làm tăng từ trường", "Cách điện", "Tạo ra dòng điện"], c: 1, l: 1},
+    {q: "Máy biến thế cấu tạo gồm:", a: ["Hai cuộn dây và nam châm", "Hai cuộn dây và lõi sắt", "Một cuộn dây và lõi sắt", "Nam châm và lõi sắt"], c: 1, l: 1},
+    {q: "Quang học: Quang tâm (O) của thấu kính có tính chất:", a: ["Tia sáng qua O bị hắt lại", "Tia sáng qua O truyền thẳng", "Tia sáng qua O bị gãy khúc", "Tia sáng qua O hội tụ tại tiêu điểm"], c: 1, l: 1},
+    {q: "Máy ảnh tạo ra ảnh trên phim có đặc điểm:", a: ["Ảnh thật, ngược chiều, nhỏ hơn vật", "Ảnh ảo, cùng chiều", "Ảnh thật, lớn hơn vật", "Ảnh ảo, nhỏ hơn vật"], c: 0, l: 1},
+
+    // --- THÔNG HIỂU ---
+    {q: "Mắc R1=10Ω nối tiếp R2=20Ω, Rtđ bằng:", a: ["10Ω", "20Ω", "30Ω", "6.67Ω"], c: 2, l: 2},
+    {q: "Mắc R1=10Ω song song R2=10Ω, Rtđ bằng:", a: ["20Ω", "10Ω", "5Ω", "1Ω"], c: 2, l: 2},
+    {q: "Đặt U=12V vào hai đầu điện trở R=4Ω. Cường độ dòng điện là:", a: ["3A", "48A", "16A", "8A"], c: 0, l: 2},
+    {q: "Dòng điện 2A chạy qua điện trở 5Ω. Hiệu điện thế hai đầu là:", a: ["2.5V", "10V", "7V", "3V"], c: 1, l: 2},
+    {q: "Bóng đèn ghi 220V - 100W. Khi sáng bình thường, dòng điện là:", a: ["~0.45A", "2.2A", "100A", "220A"], c: 0, l: 2},
+    {q: "Bóng đèn 220V - 100W hoạt động liên tục trong 10 giờ tiêu thụ:", a: ["1000 W", "1 kWh", "10 kWh", "100 kWh"], c: 1, l: 2},
+    {q: "Hai dây đồng có cùng chiều dài, S1 = 2*S2 thì:", a: ["R1 = 2*R2", "R1 = R2/2", "R1 = R2", "R1 = 4*R2"], c: 1, l: 2},
+    {q: "Khi U tăng gấp 2, R không đổi thì công suất (P) tiêu thụ sẽ:", a: ["Tăng 2 lần", "Giảm 2 lần", "Tăng 4 lần", "Không đổi"], c: 2, l: 2},
+    {q: "Đoạn mạch song song R1, R2. U không đổi. Nếu I1 > I2 thì:", a: ["R1 > R2", "R1 < R2", "R1 = R2", "Không so sánh được"], c: 1, l: 2},
+    {q: "Nhiệt lượng tỏa ra ở điện trở R trong thời gian t tỉ lệ thuận với:", a: ["I", "I²", "U", "I³"], c: 1, l: 2},
+    {q: "Theo quy tắc bàn tay trái, ngón cái choãi ra chỉ chiều của:", a: ["Dòng điện", "Đường sức từ", "Lực điện từ", "Vận tốc"], c: 2, l: 2},
+    {q: "Khi góc tới tăng, góc khúc xạ sẽ:", a: ["Giảm", "Tăng", "Không đổi", "Bằng 0"], c: 1, l: 2},
+    {q: "Vật nằm ngoài khoảng tiêu cự của thấu kính hội tụ luôn cho:", a: ["Ảnh ảo", "Ảnh thật", "Ảnh nhỏ hơn vật", "Ảnh lớn hơn vật"], c: 1, l: 2},
+    {q: "Vật nằm trong khoảng tiêu cự của thấu kính hội tụ cho:", a: ["Ảnh thật", "Ảnh ảo, cùng chiều, lớn hơn vật", "Ảnh ảo, cùng chiều, nhỏ hơn vật", "Ảnh thật, lớn hơn"], c: 1, l: 2},
+    {q: "Máy biến thế có N1 > N2 (vòng sơ cấp > thứ cấp). Đây là máy:", a: ["Tăng thế", "Hạ thế", "Phát điện", "Động cơ"], c: 1, l: 2},
+    {q: "Máy biến thế có N1=500, N2=1000, U1=220V. Tính U2:", a: ["110V", "440V", "220V", "880V"], c: 1, l: 2},
+    {q: "Khoảng cực viễn (Cv) của mắt cận thị so với mắt thường:", a: ["Gần hơn", "Xa hơn", "Bằng nhau", "Không xác định"], c: 0, l: 2},
+    {q: "Tác dụng của kính lúp là:", a: ["Tạo ảnh thật, lớn hơn", "Tạo ảnh ảo, lớn hơn để quan sát vật nhỏ", "Tạo ảnh thật, nhỏ hơn", "Tạo ảnh ảo, nhỏ hơn"], c: 1, l: 2},
+    {q: "Tia sáng song song với trục chính của thấu kính phân kì, tia ló sẽ:", a: ["Đi qua tiêu điểm", "Kéo dài đi qua tiêu điểm", "Đi thẳng", "Truyền qua quang tâm"], c: 1, l: 2},
+    {q: "Mạng điện gia đình ở Việt Nam sử dụng hiệu điện thế:", a: ["110V một chiều", "220V một chiều", "220V xoay chiều", "110V xoay chiều"], c: 2, l: 2},
+    {q: "Khi nam châm chuyển động lại gần cuộn dây kín, trong cuộn dây xuất hiện:", a: ["Lực hút", "Lực đẩy", "Dòng điện cảm ứng", "Nhiệt năng lớn"], c: 2, l: 2},
+    {q: "Khi truyền tải điện, U tăng 10 lần thì hao phí sẽ:", a: ["Giảm 10 lần", "Tăng 10 lần", "Giảm 100 lần", "Tăng 100 lần"], c: 2, l: 2},
+    {q: "Cho 2 điện trở R1=R2=R. Mắc nối tiếp, Rtđ = 40Ω. Mắc song song, Rtđ là:", a: ["10Ω", "20Ω", "5Ω", "80Ω"], c: 0, l: 2},
+    {q: "Dùng vôn kế đo U xoay chiều, giá trị hiển thị là:", a: ["Giá trị cực đại", "Giá trị hiệu dụng", "Giá trị tức thời", "Giá trị trung bình"], c: 1, l: 2},
+    {q: "Ảnh của một vật tạo bởi gương phẳng có tính chất:", a: ["Ảnh thật, lớn bằng vật", "Ảnh ảo, lớn bằng vật", "Ảnh ảo, nhỏ hơn vật", "Ảnh thật, nhỏ hơn"], c: 1, l: 2},
+    {q: "Màu sắc các vật dưới ánh sáng mặt trời là do:", a: ["Vật tự phát sáng", "Sự tán xạ ánh sáng trắng", "Vật hấp thụ hết ánh sáng", "Mắt ta tưởng tượng"], c: 1, l: 2},
+    {q: "Vật dao động càng nhanh thì âm phát ra càng:", a: ["To", "Cao (bổng)", "Trầm", "Nhỏ"], c: 1, l: 2},
+    {q: "Ròng rọc động giúp ta lợi về:", a: ["Công", "Lực", "Đường đi", "Công suất"], c: 1, l: 2},
+    {q: "Bếp điện 1000W dùng 2h mỗi ngày, trong 30 ngày tiêu thụ:", a: ["60 kWh", "600 kWh", "30 kWh", "100 kWh"], c: 0, l: 2},
+    {q: "Từ trường của dòng điện ống dây có hình dạng giống từ trường của:", a: ["Nam châm chữ U", "Nam châm thẳng", "Trái Đất", "Gương phẳng"], c: 1, l: 2},
+
+    // --- VẬN DỤNG ---
+    {q: "Mạch R1 nt (R2 // R3). R1=4, R2=6, R3=3. Rtđ là?", a: ["13Ω", "7Ω", "6Ω", "5Ω"], c: 2, l: 3},
+    {q: "Mạch điện có U=12V, R1=4Ω nt R2=8Ω. Hiệu điện thế hai đầu R1 là?", a: ["4V", "8V", "12V", "2V"], c: 0, l: 3},
+    {q: "Hai dây đồng chất. Dây 1 dài l, tiết diện S. Dây 2 dài 2l, tiết diện S/2. Tỉ số R1/R2 là?", a: ["1", "1/2", "1/4", "4"], c: 2, l: 3},
+    {q: "Bóng đèn 6V-3W. Điện trở của bóng đèn khi sáng bình thường?", a: ["12Ω", "2Ω", "18Ω", "0.5Ω"], c: 0, l: 3},
+    {q: "Một ấm điện 220V-1000W đun 2 lít nước từ 20°C đến 100°C. Hiệu suất 80%. Nhiệt dung riêng C=4200. Thời gian đun?", a: ["840s", "672s", "1050s", "1200s"], c: 0, l: 3},
+    {q: "Bếp điện có R=80Ω, I=2.5A. Nhiệt lượng toả ra trong 1 phút là?", a: ["30000J", "12000J", "5000J", "200J"], c: 0, l: 3},
+    {q: "Máy biến thế U1=220V, N1=400 vòng. Để lấy U2=11V, N2 phải bằng?", a: ["20 vòng", "80 vòng", "1000 vòng", "40 vòng"], c: 0, l: 3},
+    {q: "Vật sáng AB cao 2cm cách thấu kính hội tụ (f=10cm) 15cm. Ảnh cách thấu kính?", a: ["30cm", "15cm", "10cm", "6cm"], c: 0, l: 3},
+    {q: "Tiếp câu trên, chiều cao của ảnh A'B' là?", a: ["2cm", "4cm", "1cm", "6cm"], c: 1, l: 3},
+    {q: "Vật nằm cách thấu kính phân kì (f=15cm) 30cm. Vị trí ảnh?", a: ["Cách 10cm cùng phía", "Cách 10cm khác phía", "Cách 30cm", "Cách 15cm"], c: 0, l: 3},
+    {q: "Người cận thị có điểm cực viễn cách mắt 50cm. Tiêu cự kính cận cần đeo?", a: ["-25cm", "-50cm", "50cm", "100cm"], c: 1, l: 3},
+    {q: "Kính lúp có số bội giác 2.5X. Tiêu cự kính là?", a: ["10cm", "5cm", "25cm", "100cm"], c: 0, l: 3},
+    {q: "Máy phát điện P=100kW, U=5000V. Đường dây R=20Ω. Công suất hao phí?", a: ["8000W", "4000W", "2000W", "1000W"], c: 0, l: 3},
+    {q: "Cho 3 điện trở giống nhau R=10Ω. Cách mắc để Rtđ lớn nhất?", a: ["3 cái song song", "2 song song nối tiếp 1", "3 cái nối tiếp", "2 nối tiếp song song 1"], c: 2, l: 3},
+    {q: "Cho 3 điện trở 10Ω. Cách mắc để Rtđ nhỏ nhất?", a: ["3 cái song song", "2 song song nối tiếp 1", "3 cái nối tiếp", "2 nối tiếp song song 1"], c: 0, l: 3},
+    {q: "Đèn Đ1 (6V-3W), Đ2 (6V-6W) mắc nối tiếp vào U=12V. Nhận xét?", a: ["Cả 2 sáng bình thường", "Đ1 cháy, Đ2 tối", "Đ2 cháy, Đ1 tối", "Cả 2 tối"], c: 1, l: 3},
+    {q: "Trên dây dẫn chiều dài 1m có dòng I. Lực từ tác dụng F=0.5N khi từ trường B=0.1T vuông góc. Tính I?", a: ["5A", "0.5A", "0.05A", "1A"], c: 0, l: 3},
+    {q: "Một bóng đèn xe máy 12V-15W. Nếu R ko đổi, dùng U=6V thì P là?", a: ["7.5W", "3.75W", "15W", "10W"], c: 1, l: 3},
+    {q: "Dây mayso R=40Ω nhúng vào bình chứa 1kg nước 25°C. Đặt U=220V trong 10phút. Nước sôi ko? (Bỏ qua hao phí)", a: ["Sôi, cạn hết", "Sôi mạnh", "Vừa đủ sôi", "Chưa sôi"], c: 1, l: 3},
+    {q: "Tia sáng truyền từ không khí vào nước với góc tới 60°. Góc khúc xạ có thể là:", a: ["60°", "75°", "40°", "90°"], c: 2, l: 3},
+
+    // --- VẬN DỤNG CAO ---
+    {q: "Để đun sôi nước cần 20ph nếu dùng R1, 30ph nếu dùng R2 (cùng U). Nếu mắc R1 // R2 thì mất bao lâu?", a: ["12 phút", "50 phút", "10 phút", "25 phút"], c: 0, l: 4},
+    {q: "Để đun sôi nước cần 20ph nếu dùng R1, 30ph nếu dùng R2. Mắc R1 nt R2 thì thời gian đun là?", a: ["12 phút", "50 phút", "10 phút", "25 phút"], c: 1, l: 4},
+    {q: "Mạch có R1 nối tiếp biến trở Rx. Đặt U không đổi. Công suất trên Rx cực đại khi nào?", a: ["Rx = 0", "Rx = vô cùng", "Rx = R1", "Rx = R1/2"], c: 2, l: 4},
+    {q: "Đèn (6V-3W) và R nt vào U=9V để đèn sáng bình thường. Giá trị R?", a: ["6Ω", "12Ω", "3Ω", "9Ω"], c: 0, l: 4},
+    {q: "Truyền tải điện công suất P, điện áp U. Nếu dùng biến thế tăng U lên 5 lần thì hao phí sẽ:", a: ["Giảm 5 lần", "Giảm 25 lần", "Tăng 5 lần", "Không đổi"], c: 1, l: 4},
+    {q: "Vật AB cho ảnh ảo A'B' = 3AB qua thấu kính hội tụ. Khoảng cách vật-ảnh là 20cm. Tiêu cự f?", a: ["15cm", "10cm", "20cm", "30cm"], c: 0, l: 4},
+    {q: "Hai gương phẳng G1, G2 hợp góc 60°. Điểm sáng S nằm giữa. Số ảnh của S qua hệ là?", a: ["3", "5", "6", "vô số"], c: 1, l: 4},
+    {q: "Mạch cầu Wheatstone cân bằng (R1/R2 = R3/R4). Khi đó dòng điện qua R5 (giữa mạch cầu) là:", a: ["Cực đại", "Bằng 0", "Bằng dòng mạch chính", "Bằng một nửa dòng mạch chính"], c: 1, l: 4},
+    {q: "Nước từ độ cao 20m đổ xuống tuabin máy phát điện với lưu lượng 1m³/s. H=80%. Công suất phát là? (g=10)", a: ["160 kW", "200 kW", "80 kW", "100 kW"], c: 0, l: 4},
+    {q: "Một ấm điện 220V-1000W bị đứt dây, cắt bỏ 1/5 chiều dài rồi nối lại dùng ở 220V. Công suất mới là?", a: ["800W", "1250W", "1000W", "1200W"], c: 1, l: 4},
+    {q: "Hai bóng đèn Đ1(110V-40W) và Đ2(110V-100W) mắc nối tiếp vào mạng điện 220V. Hiện tượng gì xảy ra?", a: ["Cả 2 sáng bình thường", "Đ1 cháy, Đ2 tối", "Đ2 cháy, Đ1 tối", "Cả 2 đều cháy"], c: 1, l: 4},
+    {q: "Một ampe kế có điện trở Ra mắc nối tiếp với điện trở R=10Ω vào U=12V thì ampe kế chỉ 1A. Điện trở của ampe kế là?", a: ["1Ω", "2Ω", "12Ω", "0Ω"], c: 1, l: 4},
+    {q: "Cho mạch điện gồm nguồn U không đổi, biến trở R mắc nối tiếp với điện trở r. Công suất tỏa nhiệt trên biến trở R đạt cực đại khi nào?", a: ["R = 0", "R = vô cùng", "R = r", "R = 2r"], c: 2, l: 4},
+    {q: "Một thác nước cao 30m, lưu lượng 2m³/s. Dùng nước này quay tuabin máy phát điện với hiệu suất 70%. Công suất điện thu được là? (g=10m/s², D=1000kg/m³)", a: ["420 kW", "600 kW", "210 kW", "840 kW"], c: 0, l: 4},
+    {q: "Kéo một tời điện nâng vật nặng 100kg lên cao 10m trong 20s. HĐT động cơ là 220V, hiệu suất 80%. Cường độ dòng điện qua động cơ là?", a: ["1.8A", "2.27A", "2.84A", "3.2A"], c: 2, l: 4},
+    {q: "Một ô tô khối lượng 1 tấn chạy với tốc độ 72km/h. Động năng của ô tô lúc này là bao nhiêu?", a: ["200 kJ", "2592 kJ", "100 kJ", "50 kJ"], c: 0, l: 4},
+    {q: "Thả rơi tự do một vật 2kg từ độ cao 5m xuống đất (bỏ qua sức cản). Ngay trước khi chạm đất, động năng của vật là bao nhiêu? (g=10m/s²)", a: ["10 J", "50 J", "100 J", "200 J"], c: 2, l: 4},
+    {q: "Đặt vật sáng AB vuông góc trục chính thấu kính hội tụ (f=20cm). Để thu được ảnh thật và khoảng cách vật - ảnh nhỏ nhất thì khoảng cách đó phải bằng:", a: ["40 cm", "60 cm", "80 cm", "100 cm"], c: 2, l: 4},
+    {q: "Một người cao 1.7m đứng cách máy ảnh 2m. Vật kính máy ảnh có tiêu cự 5cm. Chiều cao của ảnh người đó trên phim gần bằng:", a: ["4.36 cm", "8.5 cm", "1.7 cm", "5.12 cm"], c: 0, l: 4},
+    {q: "Hệ 2 thấu kính hội tụ L1, L2 có cùng f=10cm đặt đồng trục cách nhau 40cm. Vật sáng đặt trước L1 cách 15cm. Ảnh cuối cùng tạo bởi hệ nằm ở đâu?", a: ["Nằm giữa 2 thấu kính", "Nằm tại tiêu điểm L2", "Ở vô cực", "Nằm tại quang tâm L2"], c: 2, l: 4}
+];
+
+class QuestionBank {
+    constructor(questions) {
+        this.L1 = questions.filter(q => q.l === 1);
+        this.L2 = questions.filter(q => q.l === 2);
+        this.L3 = questions.filter(q => q.l === 3);
+        this.L4 = questions.filter(q => q.l === 4);
+        this.shuffle(this.L1); this.shuffle(this.L2);
+        this.shuffle(this.L3); this.shuffle(this.L4);
+        
+        this.deck = [];
+        this.buildDeck(40, this.L1);
+        this.buildDeck(30, this.L2);
+        this.buildDeck(20, this.L3);
+        this.buildDeck(10, this.L4);
+        this.shuffle(this.deck);
+        this.currentIndex = 0;
+    }
+
+    shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    buildDeck(targetCount, sourceArr) {
+        let count = 0;
+        let pool = [...sourceArr];
+        while(count < targetCount && pool.length > 0) {
+            this.deck.push(pool.pop());
+            count++;
+            if(pool.length === 0 && count < targetCount) {
+                pool = [...sourceArr];
+                this.shuffle(pool);
+            }
+        }
+    }
+
+    getNextQuestion() {
+        if(this.currentIndex >= this.deck.length) return null;
+        return this.deck[this.currentIndex++];
+    }
+}
+
+// --- QUẢN LÝ ÂM THANH (Web Audio API) ---
+const AudioEngine = {
+    ctx: null,
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+    },
+    playTone(freq, type, duration, vol=0.1) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    },
+    jump() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+    },
+    powerup() {
+        this.playTone(400, 'sine', 0.1, 0.1);
+        setTimeout(() => this.playTone(600, 'sine', 0.1, 0.1), 100);
+        setTimeout(() => this.playTone(800, 'sine', 0.2, 0.1), 200);
+    },
+    hurt() {
+        this.playTone(150, 'sawtooth', 0.3, 0.2);
+        setTimeout(() => this.playTone(100, 'sawtooth', 0.4, 0.2), 100);
+    },
+    correct() {
+        this.playTone(600, 'sine', 0.1, 0.1);
+        setTimeout(() => this.playTone(800, 'sine', 0.2, 0.1), 150);
+    },
+    wrong() {
+        this.playTone(300, 'square', 0.3, 0.1);
+        setTimeout(() => this.playTone(200, 'square', 0.4, 0.1), 200);
+    }
+};
+
+// --- TÀI NGUYÊN HÌNH ẢNH (DÙNG SVG DATA URIS THAY VÌ ẢNH NGOÀI) ---
+const SVG_ASSETS = {
+    // Mario đứng yên
+    mario: `data:image/svg+xml;utf8,<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h5v1h3v1h1v2h-1v1h-1v1H9v1H6V8H5V7H4V6H3V4h1z" fill="%23E52521"/><path d="M4 6h2v1H4zm3 0h2v1H7zm-4 2h1v1H3zm7 0h1v1h-1zm-6 1h6v1H4z" fill="%23FCD091"/><path d="M5 8h2v1H5zm3 0h2v1H8zm-3 1h4v1H5z" fill="%23E52521"/><path d="M4 10h6v3H4z" fill="%2343B047"/><path d="M3 13h2v2H3zm6 0h2v2H9z" fill="%23684A22"/></svg>`,
+    // Mario chạy
+    mario_run: `data:image/svg+xml;utf8,<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h5v1h3v1h1v2h-1v1h-1v1H9v1H6V8H5V7H4V6H3V4h1z" fill="%23E52521"/><path d="M4 6h2v1H4zm3 0h2v1H7zm-4 2h1v1H3zm7 0h1v1h-1zm-6 1h6v1H4z" fill="%23FCD091"/><path d="M5 8h2v1H5zm3 0h2v1H8zm-3 1h4v1H5z" fill="%23E52521"/><path d="M4 10h6v3H4z" fill="%2343B047"/><path d="M2 13h3v2H2zm6 -1h3v2H8z" fill="%23684A22"/></svg>`,
+    mushroom: `data:image/svg+xml;utf8,<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h8v2h2v4H2V4h2z" fill="%23E52521"/><path d="M6 3h4v2H6zM3 5h2v2H3zm8 0h2v2h-2z" fill="%23FFF"/><path d="M5 8h6v6H5z" fill="%23FCD091"/><path d="M6 10h1v2H6zm3 0h1v2H9z" fill="%23000"/></svg>`,
+    apple: `data:image/svg+xml;utf8,<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 1c1-1 3-1 3 1s-1 3-3 3-3-1-3-3 2-2 3-1z" fill="%2343B047"/><path d="M3 5a4 4 0 0 0 0 8 4 4 0 0 0 10 0 4 4 0 0 0 0-8 4 4 0 0 0-10 0z" fill="%23E52521"/><path d="M10 6a2 2 0 0 1 1 2h-1a1 1 0 0 0-1-1V6z" fill="%23FFF" opacity="0.6"/></svg>`,
+    crab: `data:image/svg+xml;utf8,<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h8v4H4z" fill="%23E52521"/><path d="M5 7h2v2H5zm4 0h2v2H9z" fill="%23FFF"/><path d="M6 8h1v1H6zm4 0h1v1h-1z" fill="%23000"/><path d="M2 4h3v2H2zm9 0h3v2h-3zM2 10h2v2H2zm10 0h2v2h-2z" fill="%23E52521"/></svg>`,
+    cloud: `data:image/svg+xml;utf8,<svg viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg"><path d="M6 8a4 4 0 0 1 8 0 3 3 0 0 1 6 0 2 2 0 0 1 0 4H6a2 2 0 0 1 0-4z" fill="%23FFF" opacity="0.8"/></svg>`
+};
+
+const images = {};
+function loadImages() {
+    for (let key in SVG_ASSETS) {
+        let img = new Image();
+        img.src = SVG_ASSETS[key];
+        images[key] = img;
+    }
+}
+
+// --- LOGIC GAME & CANVAS ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const uiScore = document.getElementById('scoreEl');
+const uiLives = document.getElementById('livesEl');
+const pFill = document.getElementById('progressFill');
+const pText = document.getElementById('progressText');
+const levelEl = document.getElementById('levelEl');
+const qModal = document.getElementById('questionModal');
+const goModal = document.getElementById('gameOverScreen');
+
+let width, height, groundY;
+let isPlaying = false;
+let isPaused = false;
+let gameSpeed = 3.5;
+let frameCount = 0;
+let score = 0;
+let lives = 3;
+let distance = 0;
+let questionsAnswered = 0;
+let currentQuestion = null;
+let qBank = null;
+let timeLeft = 3600; // 60 phút
+let timerInterval = null;
+
+function formatTime(seconds) {
+    let m = Math.floor(seconds / 60);
+    let s = seconds % 60;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+// Đối tượng Mario
+const mario = {
+    x: 50,
+    y: 0,
+    width: 40,
+    height: 40,
+    baseWidth: 40,
+    baseHeight: 40,
+    vy: 0,
+    gravity: 0.6,
+    jumpForce: -12,
+    isJumping: false,
+    invulnerable: 0,
+    
+    draw() {
+        if (this.invulnerable > 0) {
+            if (Math.floor(Date.now() / 100) % 2 === 0) return; // Nhấp nháy
+        }
+        
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        
+        let currentImage = images.mario;
+
+        // Animation chạy: đổi hình, nghiêng và nhấp nhô để tạo cảm giác chạy
+        if (!this.isJumping && isPlaying && !isPaused) {
+            if (Math.floor(frameCount / 8) % 2 === 0) {
+                currentImage = images.mario_run;
+            }
+            let tilt = Math.sin(frameCount * 0.5) * 0.15;
+            ctx.rotate(tilt);
+            ctx.translate(0, Math.abs(Math.sin(frameCount * 0.5)) * -5);
+        }
+        
+        ctx.drawImage(currentImage, -this.width/2, -this.height/2, this.width, this.height);
+        ctx.restore();
+    },
+    
+    update() {
+        this.vy += this.gravity;
+        this.y += this.vy;
+        
+        if (this.y + this.height >= groundY) {
+            this.y = groundY - this.height;
+            this.vy = 0;
+            this.isJumping = false;
+        }
+        if (this.invulnerable > 0) this.invulnerable--;
+    },
+    
+    jump() {
+        if (!this.isJumping) {
+            this.vy = this.jumpForce;
+            this.isJumping = true;
+            AudioEngine.jump();
+        }
+    },
+
+    grow() {
+        let oldHeight = this.height;
+        this.width = Math.min(this.width * 1.2, 70);
+        this.height = Math.min(this.height * 1.2, 70);
+        this.y -= (this.height - oldHeight); // Đẩy lên
+        AudioEngine.powerup();
+    },
+
+    shrink() {
+        this.width = this.baseWidth;
+        this.height = this.baseHeight;
+        this.invulnerable = 60; // 1 giây vô địch
+    }
+};
+
+// Mảng chứa các thực thể (Nấm, Táo, Cua, Mây)
+let entities = [];
+let clouds = [];
+
+class Entity {
+    constructor(type) {
+        this.type = type; // 'mushroom', 'apple', 'crab'
+        this.width = 30;
+        this.height = 30;
+        this.x = width;
+        this.y = groundY - this.height;
+        this.markedForDeletion = false;
+        
+        if(type === 'crab') {
+            this.width = 40; this.height = 25;
+            this.y = groundY - this.height;
+            this.speed = gameSpeed; // Cua đứng im so với mặt đất đang trôi
+        } else if (type === 'apple') {
+            this.y = groundY - this.height - 40 - Math.random() * 50;
+            this.speed = gameSpeed;
+            this.width = 35; this.height = 35;
+        } else {
+            this.speed = gameSpeed;
+        }
+    }
+    
+    update() {
+        this.x -= this.speed;
+        if (this.x + this.width < 0) this.markedForDeletion = true;
+    }
+    
+    draw() {
+        ctx.drawImage(images[this.type], this.x, this.y, this.width, this.height);
+    }
+}
+
+class Cloud {
+    constructor() {
+        this.x = width;
+        this.y = Math.random() * (height / 2);
+        this.width = 80 + Math.random() * 40;
+        this.height = this.width * 0.6;
+        this.speed = gameSpeed * 0.2 + Math.random() * 0.5;
+        this.markedForDeletion = false;
+    }
+    update() {
+        this.x -= this.speed;
+        if(this.x + this.width < 0) this.markedForDeletion = true;
+    }
+    draw() {
+        ctx.drawImage(images.cloud, this.x, this.y, this.width, this.height);
+    }
+}
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    width = canvas.width;
+    height = canvas.height;
+    groundY = height - 50;
+    if(!isPlaying) mario.y = groundY - mario.height;
+}
+window.addEventListener('resize', resize);
+
+function checkCollision(rect1, rect2) {
+    let shrink = 5;
+    return (
+        rect1.x + shrink < rect2.x + rect2.width - shrink &&
+        rect1.x + rect1.width - shrink > rect2.x + shrink &&
+        rect1.y + shrink < rect2.y + rect2.height - shrink &&
+        rect1.y + rect1.height - shrink > rect2.y + shrink
+    );
+}
+
+function handleCollisions() {
+    entities.forEach(ent => {
+        if (!ent.markedForDeletion && checkCollision(mario, ent)) {
+            ent.markedForDeletion = true;
+            
+            if (ent.type === 'mushroom') {
+                mario.grow();
+                score += 100;
+                updateUI();
+            } 
+            else if (ent.type === 'apple') {
+                triggerQuestion();
+            } 
+            else if (ent.type === 'crab') {
+                if (mario.invulnerable === 0) {
+                    AudioEngine.hurt();
+                    lives--;
+                    document.body.classList.add('shake');
+                    setTimeout(() => document.body.classList.remove('shake'), 500);
+                    updateUI();
+                    
+                    if (lives <= 0) {
+                        gameOver();
+                    } else {
+                        mario.shrink();
+                    }
+                }
+            }
+        }
+    });
+}
+
+function triggerQuestion() {
+    isPaused = true;
+    currentQuestion = qBank.getNextQuestion();
+    
+    if (!currentQuestion) {
+        gameOver(true);
+        return;
+    }
+
+    document.getElementById('qCountDisplay').innerText = (questionsAnswered + 1);
+    document.getElementById('questionText').innerText = currentQuestion.q;
+    
+    let lvlText = ["NHẬN BIẾT", "THÔNG HIỂU", "VẬN DỤNG", "VẬN DỤNG CAO"][currentQuestion.l - 1];
+    let bgColors = ["#22c55e", "#3b82f6", "#f97316", "#dc2626"];
+    
+    const badge = document.getElementById('qLevelBadge');
+    badge.innerText = lvlText;
+    badge.style.backgroundColor = bgColors[currentQuestion.l - 1];
+
+    const grid = document.getElementById('answersGrid');
+    grid.innerHTML = '';
+    
+    currentQuestion.a.forEach((ans, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "answer-btn";
+        btn.innerText = `${String.fromCharCode(65 + idx)}. ${ans}`;
+        btn.onclick = () => handleAnswer(idx, btn);
+        grid.appendChild(btn);
+    });
+
+    document.getElementById('feedbackText').classList.add('hidden');
+    qModal.classList.remove('hidden');
+    
+    requestAnimationFrame(() => {
+        qModal.classList.remove('opacity-0');
+    });
+}
+
+function handleAnswer(selectedIndex, btnElement) {
+    const btns = document.getElementById('answersGrid').querySelectorAll('button');
+    btns.forEach(b => b.disabled = true);
+
+    const isCorrect = (selectedIndex === currentQuestion.c);
+    const feedback = document.getElementById('feedbackText');
+    feedback.classList.remove('hidden');
+
+    if (isCorrect) {
+        btnElement.classList.add('correct');
+        AudioEngine.correct();
+        score += 500 * currentQuestion.l;
+        questionsAnswered++;
+
+        let extraMsg = "";
+        if (questionsAnswered > 0 && questionsAnswered % 3 === 0) {
+            lives++;
+            extraMsg = " (+1 MẠNG! ❤️)";
+            setTimeout(() => AudioEngine.powerup(), 300);
+        }
+
+        feedback.innerText = "CHÍNH XÁC! +" + (500 * currentQuestion.l) + " điểm" + extraMsg;
+        feedback.style.color = "#22c55e";
+    } else {
+        btnElement.classList.add('wrong');
+        btns[currentQuestion.c].classList.add('correct');
+        AudioEngine.wrong();
+        lives--;
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 500);
+        feedback.innerText = "SAI RỒI! Mất 1 mạng.";
+        feedback.style.color = "#ef4444";
+    }
+
+    updateUI();
+
+    setTimeout(() => {
+        qModal.classList.add('opacity-0');
+        setTimeout(() => {
+            qModal.classList.add('hidden');
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                isPaused = false;
+                gameSpeed += 0.1;
+                requestAnimationFrame(gameLoop);
+            }
+        }, 300);
+    }, 1500);
+}
+
+function updateUI() {
+    uiScore.innerText = score;
+    document.getElementById('timeEl').innerText = formatTime(timeLeft);
+    
+    uiLives.innerHTML = '';
+    for(let i=0; i<Math.max(0, lives); i++) {
+        uiLives.innerHTML += `<span class="drop-shadow" style="color: #ef4444;">❤️</span>`;
+    }
+
+    let percent = (questionsAnswered / 100) * 100;
+    pFill.style.width = percent + '%';
+    pText.innerText = `${questionsAnswered}/100`;
+
+    levelEl.innerText = Math.floor((gameSpeed - 3.5) / 0.5) + 1;
+}
+
+function spawnEntities() {
+    if (frameCount % 60 === 0) {
+        clouds.push(new Cloud());
+    }
+
+    if (frameCount % Math.floor(Math.random() * 100 + 80) === 0) {
+        let rand = Math.random();
+        if (rand < 0.4) {
+            entities.push(new Entity('apple'));
+        } else if (rand < 0.8) {
+            entities.push(new Entity('crab'));
+        } else {
+            entities.push(new Entity('mushroom'));
+        }
+    }
+}
+
+function drawBackground() {
+    let bgOffset = (frameCount * gameSpeed) % 40;
+    
+    ctx.fillStyle = '#D95700';
+    ctx.fillRect(0, groundY, width, height - groundY);
+    
+    ctx.fillStyle = '#C24E00';
+    for(let i = -1; i < width / 40 + 2; i++) {
+        ctx.fillRect(i * 40 - bgOffset, groundY + 15, 20, 20);
+        ctx.fillRect(i * 40 - bgOffset + 20, groundY + 40, 20, 20);
+    }
+
+    ctx.fillStyle = '#43B047';
+    ctx.fillRect(0, groundY, width, 15);
+    
+    ctx.fillStyle = '#22C55E';
+    for(let i = -1; i < width / 40 + 2; i++) {
+        ctx.fillRect(i * 40 - bgOffset, groundY, 20, 8);
+    }
+}
+
+function gameLoop() {
+    if (!isPlaying || isPaused) return;
+
+    ctx.clearRect(0, 0, width, height);
+
+    drawBackground();
+
+    clouds.forEach(c => { c.update(); c.draw(); });
+    clouds = clouds.filter(c => !c.markedForDeletion);
+
+    spawnEntities();
+    
+    entities.forEach(e => { e.update(); e.draw(); });
+    entities = entities.filter(e => !e.markedForDeletion);
+
+    mario.update();
+    mario.draw();
+
+    handleCollisions();
+
+    distance += gameSpeed * 0.1;
+    frameCount++;
+
+    requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    AudioEngine.init();
+    qBank = new QuestionBank(rawQuestions);
+    
+    score = 0;
+    lives = 3;
+    distance = 0;
+    questionsAnswered = 0;
+    gameSpeed = 3.5;
+    frameCount = 0;
+    timeLeft = 3600;
+    entities = [];
+    clouds = [];
+    mario.shrink();
+    mario.y = groundY - mario.height;
+    
+    updateUI();
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    qModal.classList.add('hidden');
+    qModal.classList.remove('opacity-0');
+    
+    isPlaying = true;
+    isPaused = false;
+    
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (isPlaying) {
+            timeLeft--;
+            document.getElementById('timeEl').innerText = formatTime(timeLeft);
+            if (timeLeft <= 0) {
+                qModal.classList.add('hidden');
+                gameOver(false);
+            }
+        }
+    }, 1000);
+
+    requestAnimationFrame(gameLoop);
+}
+
+function gameOver(win = false) {
+    isPlaying = false;
+    if (timerInterval) clearInterval(timerInterval);
+    
+    AudioEngine.hurt();
+    setTimeout(() => AudioEngine.hurt(), 200);
+
+    const goScreen = document.getElementById('gameOverScreen');
+    document.getElementById('finalScore').innerText = score;
+    document.getElementById('finalQs').innerText = questionsAnswered;
+    document.getElementById('finalDist').innerText = Math.floor(distance);
+
+    let rank = 'D', desc = 'Kém', color = '#6b7280';
+    if (questionsAnswered >= 90) { rank = 'S'; desc = 'Tuyệt Đỉnh (Thiên Tài)'; color = '#facc15'; }
+    else if (questionsAnswered >= 70) { rank = 'A'; desc = 'Giỏi (Chuyên Lí)'; color = '#ef4444'; }
+    else if (questionsAnswered >= 40) { rank = 'B'; desc = 'Khá'; color = '#3b82f6'; }
+    else if (questionsAnswered >= 15) { rank = 'C'; desc = 'Trung bình'; color = '#22c55e'; }
+
+    const rankEl = document.getElementById('finalRank');
+    rankEl.innerText = rank;
+    rankEl.style.color = color;
+    document.getElementById('rankDesc').innerText = desc;
+
+    if (win) {
+        let title = document.querySelector('#gameOverScreen h1');
+        title.innerText = "CHIẾN THẮNG!";
+        title.style.color = '#facc15';
+    }
+
+    goScreen.classList.remove('hidden');
+    requestAnimationFrame(() => goScreen.classList.remove('opacity-0'));
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        if (isPlaying && !isPaused) mario.jump();
+        e.preventDefault();
+    }
+});
+window.addEventListener('mousedown', () => {
+    if (isPlaying && !isPaused) mario.jump();
+});
+window.addEventListener('touchstart', (e) => {
+    if (isPlaying && !isPaused && e.target.tagName !== 'BUTTON') {
+        mario.jump();
+    }
+}, {passive: false});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+
+loadImages();
+resize();
+
+</script>
+</body>
+</html>
